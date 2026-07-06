@@ -32,10 +32,7 @@ async function run() {
     const database = client.db("contact-crm");
     const contactCollections = database.collection("contacts");
 
-    app.get("/api/contacts", async (req, res) => {
-      const result = await contactCollections.find().toArray();
-      res.send(result);
-    });
+   
 
     // Get Single Contact
     app.get("/api/contacts/:id", async (req, res) => {
@@ -47,6 +44,7 @@ async function run() {
         };
 
         const result = await contactCollections.findOne(query);
+        console.log(result)
 
         res.send(result);
       } catch (error) {
@@ -75,39 +73,84 @@ async function run() {
     });
 
     // Filter the contact
-    app.get("/api/contacts", async (req, res) => {
-      const { search = "", sort = "newest" } = req.query;
+ app.get("/api/contacts", async (req, res) => {
 
-      const query = {};
+  console.log("Query Params:", req.query);
 
-      if (search) {
-        query.$or = [
-          { firstName: { $regex: search, $options: "i" } },
-          { lastName: { $regex: search, $options: "i" } },
-          { email: { $regex: search, $options: "i" } },
-          { phone: { $regex: search, $options: "i" } },
-        ];
-      }
+  const { search = "", sort = "newest" } = req.query;
 
-     
+  console.log("Search =", search);
 
-      let sortOption = {};
+  const query = {};
 
-      if (sort === "newest") {
-        sortOption = { _id: -1 };
-      }
+  if (search) {
+    query.$or = [
+      { firstName: { $regex: search, $options: "i" } },
+      { lastName: { $regex: search, $options: "i" } },
+      { email: { $regex: search, $options: "i" } },
+      { phone: { $regex: search, $options: "i" } },
+    ];
+  }
 
-      if (sort === "oldest") {
-        sortOption = { _id: 1 };
-      }
+  console.log("Mongo Query =", JSON.stringify(query));
 
-      const result = await contactCollections
-        .find(query)
-        .sort(sortOption)
-        .toArray();
+  let sortOption = {};
 
-      res.send(result);
-    });
+  if (sort === "newest") {
+    sortOption = { _id: -1 };
+  }
+
+  if (sort === "oldest") {
+    sortOption = { _id: 1 };
+  }
+
+  const result = await contactCollections
+    .find(query)
+    .sort(sortOption)
+    .toArray();
+
+  console.log("Matched =", result.length);
+
+  res.send(result);
+});
+
+
+
+// update contact
+app.patch('/api/contacts/:id' , async(req, res) => {
+  const id = req.params.id
+  const query = {
+          _id: new ObjectId(id),
+        };
+
+        const modifiedUser = req.body;
+
+        const updatedDocument = {
+          $set: {
+            firstName:modifiedUser.firstName,
+            lastName:modifiedUser.lastName,
+            email:modifiedUser.email,
+            phone:modifiedUser.phone,
+            company:modifiedUser.company,
+            jobTitle:modifiedUser.jobTitle,
+            address:modifiedUser.address,
+            birthday:modifiedUser.birthday,
+            website:modifiedUser.website,
+            personalNote:modifiedUser.personalNote
+
+          }
+        }
+
+
+        const result = await contactCollections.updateOne(query,updatedDocument)
+        console.log(result)
+        res.send(result)
+})
+
+
+
+
+
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
