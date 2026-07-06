@@ -6,8 +6,8 @@ require("dotenv").config();
 app.use(cors());
 app.use(express.json());
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
-const dns = require("dns");
-dns.setServers(["8.8.8.8", "1.1.1.1"]);
+// const dns = require("dns");
+// dns.setServers(["8.8.8.8", "1.1.1.1"]);
 
 app.get("/", (req, res) => {
   res.send("Hello World!");
